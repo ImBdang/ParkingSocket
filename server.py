@@ -81,7 +81,7 @@ def handle_client(conn, addr):
                 clients.remove(conn)
         conn.close()
 
-def start_socket_server():
+def start_socket_server_old():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((HOST, PORT))
     server_socket.listen(5)
@@ -90,6 +90,31 @@ def start_socket_server():
     while True:
         conn, addr = server_socket.accept()
         threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
+
+def start_socket_server():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((HOST, PORT))
+    server_socket.listen(5)
+    print(f"Socket server listening on {HOST}:{PORT}")
+
+    MAX_CLIENTS = 5
+
+    while True:
+        conn, addr = server_socket.accept()
+
+        with clients_lock:
+            if len(clients) >= MAX_CLIENTS:
+                # Đẩy client cũ nhất ra
+                old_conn = clients.pop(0)
+                try:
+                    old_conn.shutdown(socket.SHUT_RDWR)
+                except:
+                    pass
+                old_conn.close()
+                print("Kicked old client to make room for new one!")
+
+        threading.Thread(target=handle_client, daemon=True, args=(conn, addr)).start()
+
 
 # --- FastAPI endpoints --- #
 @app.post("/cam1")
