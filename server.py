@@ -97,6 +97,9 @@ def start_socket_server():
     server_socket.listen(5)
     print(f"Socket server listening on {HOST}:{PORT}")
 
+    push_json_to_all(FILE_CAM1, "cam1")
+
+    push_json_to_all(FILE_CAM2, "cam2")
     MAX_CLIENTS = 5
 
     while True:
